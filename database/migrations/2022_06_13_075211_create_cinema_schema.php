@@ -34,17 +34,97 @@ class CreateCinemaSchema extends Migration
      * As a user I want to know where I'm sitting on my ticket
      * As a cinema owner I dont want to configure the seating for every show
      */
+    
     public function up()
     {
-        throw new \Exception('implement in coding task 4, you can ignore this exception if you are just running the initial migrations.');
+        // Create table for movies
+        Schema::create('movies', function (Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->text('description');
+            $table->integer('duration_minutes');
+            $table->timestamps();
+        });
+
+        // Create table for showtimes
+        Schema::create('showtimes', function (Blueprint $table) {
+            $table->id();
+            $table->dateTime('start_time');
+            $table->dateTime('end_time');
+            $table->unsignedBigInteger('movie_id');
+            $table->foreign('movie_id')->references('id')->on('movies');
+            $table->timestamps();
+        });
+
+        // Create table for showrooms
+        Schema::create('showrooms', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->timestamps();
+        });
+
+        // Create table for showtime-room mapping
+        Schema::create('showtime_room', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('showtime_id');
+            $table->foreign('showtime_id')->references('id')->on('showtimes');
+            $table->unsignedBigInteger('room_id');
+            $table->foreign('room_id')->references('id')->on('showrooms');
+            $table->timestamps();
+        });
+
+        // Create table for seat types
+        Schema::create('seat_types', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->integer('premium_percentage')->default(0);
+            $table->timestamps();
+        });
+
+        // Create table for seats
+        Schema::create('seats', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('room_id');
+            $table->foreign('room_id')->references('id')->on('showrooms');
+            $table->unsignedBigInteger('seat_type_id');
+            $table->foreign('seat_type_id')->references('id')->on('seat_types');
+            $table->string('name');
+            $table->timestamps();
+        });
+
+        // Create table for bookings
+        Schema::create('bookings', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('showtime_id');
+            $table->foreign('showtime_id')->references('id')->on('showtimes');
+            $table->unsignedBigInteger('seat_id');
+            $table->foreign('seat_id')->references('id')->on('seats');
+            $table->timestamps();
+        });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
+        Schema::dropIfExists('bookings');
+        Schema::dropIfExists('seats');
+        Schema::dropIfExists('seat_types');
+        Schema::dropIfExists('showtime_room');
+        Schema::dropIfExists('showrooms');
+        Schema::dropIfExists('showtimes');
+        Schema::dropIfExists('movies');
     }
+
+    // public function up()
+    // {
+    //     throw new \Exception('implement in coding task 4, you can ignore this exception if you are just running the initial migrations.');
+    // }
+
+    // /**
+    //  * Reverse the migrations.
+    //  *
+    //  * @return void
+    //  */
+    // public function down()
+    // {
+    // }
 }
